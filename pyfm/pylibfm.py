@@ -63,7 +63,8 @@ class FM:
                  task='classification',
                  verbose=True,
                  shuffle_training=True,
-                 seed=28):
+                 seed=28,
+                 v0=None):
 
         self.num_factors = num_factors
         self.num_iter = num_iter
@@ -96,6 +97,8 @@ class FM:
         self.sum_f = 0.0
         self.sum_f_dash_f = 0.0
         self.verbose = verbose
+
+        self.v0 = v0
 
     def _validate_params(self):
         """Validate input params. """
@@ -184,8 +187,12 @@ class FM:
         self.w0 = 0.0
         self.w = np.zeros(self.num_attribute)
         np.random.seed(seed=self.seed)
-        self.v = np.random.normal(scale=self.init_stdev, size=(
-            self.num_factors, self.num_attribute))
+
+        if self.v0 is None:
+            self.v = np.random.normal(scale=self.init_stdev, size=(
+                self.num_factors, self.num_attribute))
+        else:
+            self.v = self.v0
 
         self.fm_fast = FM_fast(self.w,
                                self.v,
