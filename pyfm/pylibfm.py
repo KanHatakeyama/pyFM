@@ -3,15 +3,19 @@ from sklearn.model_selection import train_test_split
 import random
 from pyfm_fast import FM_fast, CSRDataset
 
+"""
+20221005 add warm start. K.H.
+
+"""
+
 LEARNING_RATE_TYPES = {"optimal": 0, "invscaling": 1, "constant": 2}
-TASKS = {"regression": 0, "classification" : 1}
+TASKS = {"regression": 0, "classification": 1}
+
 
 class FM:
     """Factorization machine fitted by minimizing a regularized empirical loss with adaptive SGD.
-
     Parameters
     ----------
-
     num_factors : int
         The dimensionality of the factorized 2-way interactions
     num_iter : int
@@ -49,6 +53,7 @@ class FM:
     seed : int
         The seed of the pseudo random number generator
     """
+
     def __init__(self,
                  num_factors=10,
                  num_iter=1,
@@ -63,7 +68,9 @@ class FM:
                  task='classification',
                  verbose=True,
                  shuffle_training=True,
-                 seed = 28):
+                 seed=28,
+                 v0=None,
+                 ):
 
         self.num_factors = num_factors
         self.num_iter = num_iter
@@ -96,6 +103,8 @@ class FM:
         self.sum_f = 0.0
         self.sum_f_dash_f = 0.0
         self.verbose = verbose
+
+        self.v0 = v0
 
     def _validate_params(self):
         """Validate input params. """
@@ -130,7 +139,7 @@ class FM:
         else:
             return 0
 
-    def _prepare_y(self,y):
+    def _prepare_y(self, y):
         """Maps labels to [-1, 1] space"""
         y_i = np.ones(y.shape, dtype=np.float64, order="C")
         y_i[y != 1] = -1.0
@@ -138,15 +147,12 @@ class FM:
 
     def fit(self, X, y):
         """Fit factorization machine using Stochastic Gradient Descent with Adaptive Regularization.
-
         Parameters
         ----------
         X : {array-like, sparse matrix}, shape = [n_samples, n_features]
             Training data
-
         y : numpy array of shape [n_samples]
             Target values
-
         Returns
         -------
         self : returns an instance of self.
@@ -167,12 +173,14 @@ class FM:
         k1 = self._bool_to_int(self.k1)
         shuffle_training = self._bool_to_int(self.shuffle_training)
         verbose = self._bool_to_int(self.verbose)
-        learning_rate_schedule = self._get_learning_rate_type(self.learning_rate_schedule)
+        learning_rate_schedule = self._get_learning_rate_type(
+            self.learning_rate_schedule)
         task = self._get_task(self.task)
 
         # use sklearn to create a validation dataset for lambda updates
         if self.verbose == True:
-            print("Creating validation dataset of %.2f of training for adaptive regularization" % self.validation_size)
+            print("Creating validation dataset of %.2f of training for adaptive regularization" %
+                  self.validation_size)
         X_train, validation, train_labels, validation_labels = train_test_split(
             X, y, test_size=self.validation_size)
         self.num_attribute = X_train.shape[1]
@@ -185,7 +193,12 @@ class FM:
         self.w0 = 0.0
         self.w = np.zeros(self.num_attribute)
         np.random.seed(seed=self.seed)
-        self.v = np.random.normal(scale=self.init_stdev,size=(self.num_factors, self.num_attribute))
+
+        if self.v0 is None:
+            self.v = np.random.normal(scale=self.init_stdev, size=(
+                self.num_factors, self.num_attribute))
+        else:
+            self.v = self.v0
 
         self.fm_fast = FM_fast(self.w,
                                self.v,
@@ -216,13 +229,11 @@ class FM:
 
     def predict(self, X):
         """Predict using the factorization machine
-
         Parameters
         ----------
         X : sparse matrix, shape = [n_samples, n_features]
         or
         X : single instance [1, n_features]
-
         Returns
         -------
         float if X is one instance
@@ -233,9 +244,10 @@ class FM:
 
         return self.fm_fast._predict(sparse_X)
 
+
 def _make_dataset(X, y_i):
     """Create ``Dataset`` abstraction for sparse and dense inputs."""
-    sample_weight = np.ones(X.shape[0], dtype=np.float64, order='C') # ignore sample weight for the moment
+    sample_weight = np.ones(
+        X.shape[0], dtype=np.float64, order='C')  # ignore sample weight for the moment
     dataset = CSRDataset(X.data, X.indptr, X.indices, y_i, sample_weight)
-    return dataset
-
+    return
