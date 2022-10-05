@@ -69,7 +69,7 @@ class FM:
                  verbose=True,
                  shuffle_training=True,
                  seed=28,
-                 v0=None,
+                 v0=0,
                  ):
 
         self.num_factors = num_factors
@@ -194,7 +194,7 @@ class FM:
         self.w = np.zeros(self.num_attribute)
         np.random.seed(seed=self.seed)
 
-        if self.v0 is None:
+        if self.v0 ==0:
             self.v = np.random.normal(scale=self.init_stdev, size=(
                 self.num_factors, self.num_attribute))
         else:
