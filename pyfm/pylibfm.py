@@ -197,11 +197,12 @@ class FM:
         self.v = np.random.normal(scale=self.init_stdev, size=(
             self.num_factors, self.num_attribute))
 
-        if self.v0!=0:
-           if self.verbose:
+        """
+        if self.v0 != 0:
+            if self.verbose:
                 print("Warm start")
-           self.v = self.v0
-
+            self.v = self.v0
+        """
         self.fm_fast = FM_fast(self.w,
                                self.v,
                                self.num_factors,
