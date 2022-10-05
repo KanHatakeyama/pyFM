@@ -194,11 +194,13 @@ class FM:
         self.w = np.zeros(self.num_attribute)
         np.random.seed(seed=self.seed)
 
-        if self.v0 ==0:
-            self.v = np.random.normal(scale=self.init_stdev, size=(
-                self.num_factors, self.num_attribute))
-        else:
-            self.v = self.v0
+        self.v = np.random.normal(scale=self.init_stdev, size=(
+            self.num_factors, self.num_attribute))
+
+        if self.v0!=0:
+           if self.verbose:
+                print("Warm start")
+           self.v = self.v0
 
         self.fm_fast = FM_fast(self.w,
                                self.v,
