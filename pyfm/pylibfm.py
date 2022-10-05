@@ -3,11 +3,6 @@ from sklearn.model_selection import train_test_split
 import random
 from pyfm_fast import FM_fast, CSRDataset
 
-"""
-20221005 add warm start. K.H.
-
-"""
-
 LEARNING_RATE_TYPES = {"optimal": 0, "invscaling": 1, "constant": 2}
 TASKS = {"regression": 0, "classification": 1}
 
@@ -68,9 +63,7 @@ class FM:
                  task='classification',
                  verbose=True,
                  shuffle_training=True,
-                 seed=28,
-                 v0=0,
-                 ):
+                 seed=28):
 
         self.num_factors = num_factors
         self.num_iter = num_iter
@@ -103,8 +96,6 @@ class FM:
         self.sum_f = 0.0
         self.sum_f_dash_f = 0.0
         self.verbose = verbose
-
-        self.v0 = v0
 
     def _validate_params(self):
         """Validate input params. """
@@ -193,16 +184,9 @@ class FM:
         self.w0 = 0.0
         self.w = np.zeros(self.num_attribute)
         np.random.seed(seed=self.seed)
-
         self.v = np.random.normal(scale=self.init_stdev, size=(
             self.num_factors, self.num_attribute))
 
-        """
-        if self.v0 != 0:
-            if self.verbose:
-                print("Warm start")
-            self.v = self.v0
-        """
         self.fm_fast = FM_fast(self.w,
                                self.v,
                                self.num_factors,
@@ -253,4 +237,4 @@ def _make_dataset(X, y_i):
     sample_weight = np.ones(
         X.shape[0], dtype=np.float64, order='C')  # ignore sample weight for the moment
     dataset = CSRDataset(X.data, X.indptr, X.indices, y_i, sample_weight)
-    return
+    return dataset
